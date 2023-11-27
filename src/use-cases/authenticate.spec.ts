@@ -1,15 +1,20 @@
 import { InMemoryUsersRepository } from "@/repositories/in-memory/in-memory-users-repository";
-import { describe, expect, it } from "vitest";
-import { AuthenticateUseCase } from "../authenticate";
+import { beforeEach, describe, expect, it } from "vitest";
+import { AuthenticateUseCase } from "./authenticate";
 import { hash } from "bcryptjs";
-import { InvalidCredentialsError } from "./invalid-credentials-error";
+import { InvalidCredentialsError } from "./errors/invalid-credentials-error";
+
+let usersRepository: InMemoryUsersRepository;
+let sut: AuthenticateUseCase;
+//sut - system under test
 
 describe("Authenticate Use Case", () => {
-    it("shold be able to authenticate", async () => {
-        const usersRepository = new InMemoryUsersRepository();
-        const sut = new AuthenticateUseCase(usersRepository);
-        //sut - system under test
+    beforeEach(()=> {
+        usersRepository = new InMemoryUsersRepository();
+        sut = new AuthenticateUseCase(usersRepository);
+    });
 
+    it("should be able to authenticate", async () => {
         await usersRepository.create({
             name: "John Due",
             email: "johndue@email.com",
@@ -24,11 +29,7 @@ describe("Authenticate Use Case", () => {
         expect(user.id).toEqual(expect.any(String));
     });
 
-    it("shold not be able to authenticate with worng email", async () => {
-        const usersRepository = new InMemoryUsersRepository();
-        const sut = new AuthenticateUseCase(usersRepository);
-        //sut - system under test
-
+    it("should not be able to authenticate with worng email", async () => {
         expect(() => 
             sut.execute({
                 email: "johndue@email.com",
@@ -37,11 +38,7 @@ describe("Authenticate Use Case", () => {
         ).rejects.toBeInstanceOf(InvalidCredentialsError);
     });
 
-    it("shold be not able to authenticate whith wrong password", async () => {
-        const usersRepository = new InMemoryUsersRepository();
-        const sut = new AuthenticateUseCase(usersRepository);
-        //sut - system under test
-
+    it("should be not able to authenticate whith wrong password", async () => {
         await usersRepository.create({
             name: "John Due",
             email: "johndue@email.com",

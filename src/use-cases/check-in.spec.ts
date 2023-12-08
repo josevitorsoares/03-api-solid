@@ -1,26 +1,31 @@
 import { beforeEach, describe, expect, it, afterEach, vi } from "vitest";
+import { Decimal } from "@prisma/client/runtime/library";
+
+import { CheckInUseCase } from "./check-in";
+
 import { InMemoryCheckInRepository } from "@/repositories/in-memory/in-memory-check-in-repository";
 import { InMemoryGymsRepository } from "@/repositories/in-memory/in-memory-gyms-repository";
-import { CheckInUseCase } from "./check-in";
-import { Decimal } from "@prisma/client/runtime/library";
+
+import { MaxNumberOfCheckInsError } from "./errors/max-number-of-check-ins-error";
+import { MaxDistanceError } from "./errors/max-distance-error";
 
 let checkInRepository: InMemoryCheckInRepository;
 let gymsRepository: InMemoryGymsRepository;
 let sut: CheckInUseCase;
 
 describe("Check In Use Case", () => {
-    beforeEach(() => {
+    beforeEach(async () => {
         checkInRepository = new InMemoryCheckInRepository();
         gymsRepository = new InMemoryGymsRepository();
         sut = new CheckInUseCase(checkInRepository, gymsRepository);
 
-        gymsRepository.items.push({
+        await gymsRepository.create({
             id: "gym-01",
             title: "JavaScript Gym",
             description: "",
             phone: "",
-            latitude: new Decimal(-5.8917081),
-            longitude: new Decimal(-42.6309442)
+            latitude: -5.8917081,
+            longitude: -42.6309442
         });
 
         vi.useFakeTimers();
@@ -58,7 +63,7 @@ describe("Check In Use Case", () => {
                 userLatitude: -5.8917081,
                 userLongitude: -42.6309442,
             })
-        ).rejects.toBeInstanceOf(Error);
+        ).rejects.toBeInstanceOf(MaxNumberOfCheckInsError);
     });
 
     it("should be able to check in twice but in differnt days", async () => {
@@ -84,7 +89,7 @@ describe("Check In Use Case", () => {
     });
     it("should not be able to check in on distance gym", async () => {
         gymsRepository.items.push({
-            id: "gym-012",
+            id: "gym-02",
             title: "JavaScript Gym",
             description: "",
             phone: "",
@@ -97,6 +102,6 @@ describe("Check In Use Case", () => {
             userId: "user-01",
             userLatitude: -5.8917081,
             userLongitude: -42.6309442,
-        }));
+        })).rejects.toBeInstanceOf(MaxDistanceError);
     });
 });

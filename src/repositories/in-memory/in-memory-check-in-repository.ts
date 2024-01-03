@@ -27,10 +27,10 @@ export class InMemoryCheckInRepository implements CheckInsRepositoy {
 
         const checkInOnSameDate = this.items.find((checkin) => {
             const checkInDate = dayjs(checkin.created_at);
-            const isOnSameDate = 
-                checkInDate.isAfter(startOfTheDay) && checkInDate.isBefore(endOfTheDay); 
-            
-            return checkin.user_id === userId  && isOnSameDate;
+            const isOnSameDate =
+                checkInDate.isAfter(startOfTheDay) && checkInDate.isBefore(endOfTheDay);
+
+            return checkin.user_id === userId && isOnSameDate;
         });
 
         if (!checkInOnSameDate) {
@@ -39,5 +39,10 @@ export class InMemoryCheckInRepository implements CheckInsRepositoy {
 
         return checkInOnSameDate;
     }
-
+    
+    async fetchManyByUserId(userId: string, page: number) {
+        return this.items
+            .filter(iten => iten.user_id === userId)
+            .slice((page - 1) * 20, page * 20);
+    }
 }
